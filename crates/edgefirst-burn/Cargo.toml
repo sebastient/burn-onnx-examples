@@ -1,0 +1,37 @@
+[package]
+name = "edgefirst-burn"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Zero-copy integration between edgefirst-hal and the Burn deep-learning framework"
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+burn = { workspace = true }
+burn-cubecl = { workspace = true, optional = true }
+edgefirst-hal = { workspace = true }
+edgefirst-tensor = { workspace = true }
+edgefirst-image = { workspace = true }
+edgefirst-decoder = { workspace = true }
+edgefirst-codec = { workspace = true }
+half = { workspace = true }
+thiserror = { workspace = true }
+bytemuck = { workspace = true }
+
+[features]
+default = []
+
+# Zero-copy IOSurface import for burn's Metal (wgpu-on-Metal) backend.
+metal-iosurface = ["burn/metal", "burn/cubecl", "burn-cubecl"]
+
+# Enables a CPU burn backend (`flex`) so the unit tests can construct tensors.
+test = ["burn/flex"]
+
+[lib]
+name = "edgefirst_burn"
+path = "src/lib.rs"

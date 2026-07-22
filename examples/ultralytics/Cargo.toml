@@ -1,0 +1,32 @@
+[package]
+name = "ultralytics"
+version.workspace = true
+edition = "2024"
+license.workspace = true
+publish = false
+
+[features]
+default = ["burn/flex", "burn/vision"]
+# Zero-copy HAL + Metal integration (macOS).
+metal = ["burn/metal", "edgefirst-burn/metal-iosurface"]
+
+[dependencies]
+burn = { workspace = true, features = ["flex", "vision"] }
+burn-onnx-runtime = { workspace = true, features = ["default"] }
+burn-store = { workspace = true, features = ["std", "burnpack"] }
+clap = { workspace = true }
+bytemuck = { workspace = true }
+
+# HAL integration
+edgefirst-burn = { workspace = true }
+edgefirst-hal = { workspace = true }
+edgefirst-tensor = { workspace = true }
+edgefirst-image = { workspace = true }
+edgefirst-decoder = { workspace = true }
+edgefirst-codec = { workspace = true }
+
+[dev-dependencies]
+float-cmp = { workspace = true }
+
+[build-dependencies]
+burn-onnx = { workspace = true, features = ["default"] }

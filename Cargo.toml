@@ -1,0 +1,75 @@
+[workspace]
+resolver = "2"
+members = ["crates/edgefirst-burn", "examples/ultralytics"]
+default-members = ["crates/edgefirst-burn"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["EdgeFirst Contributors"]
+license = "Apache-2.0"
+homepage = "https://edgefirst.ai"
+repository = "https://github.com/EdgeFirstAI/edgefirst-burn"
+readme = "README.md"
+keywords = ["edge-ai", "machine-learning", "burn", "hal", "zero-copy"]
+categories = ["science", "multimedia::images"]
+
+[workspace.dependencies]
+# Internal
+edgefirst-burn = { path = "crates/edgefirst-burn" }
+
+# Burn resolves from the sebastient/burn fork by branch — the same branch
+# burn-onnx pins — so the whole graph unifies on one burn/cubecl instance.
+burn = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+burn-cubecl = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+burn-store = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+burn-tensor = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+
+# burn-onnx crates from the sebastient/burn-onnx fork.
+burn-onnx = { git = "https://github.com/sebastient/burn-onnx", branch = "burn-onnx-runtime", default-features = false }
+burn-onnx-runtime = { git = "https://github.com/sebastient/burn-onnx", branch = "burn-onnx-runtime", default-features = false }
+
+# HAL
+edgefirst-hal = "0.27"
+edgefirst-tensor = "0.27"
+edgefirst-image = "0.27"
+edgefirst-decoder = "0.27"
+edgefirst-codec = "0.27"
+
+# Common
+half = "2"
+thiserror = "2"
+bytemuck = "1"
+clap = { version = "4", features = ["derive"] }
+float-cmp = "0.10.0"
+
+# cubek still pins its cubecl dependency by the upstream tracel-ai URL; redirect
+# that onto the sebastient/cubecl fork branch so cubek and burn resolve one
+# shared cubecl instance (avoids duplicate cubecl-core / cubecl-ir trait impls).
+# burn itself now points at the sebastient fork directly (see workspace deps
+# above), so no tracel-ai/burn patch is needed.
+[patch."https://github.com/tracel-ai/cubecl"]
+cubecl = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-common = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-core = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-cpp = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-cpu = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-cuda = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-hip = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-ir = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-macros = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-macros-internal = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-opt = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-runtime = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-spirv = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-std = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-wgpu = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+cubecl-zspace = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+
+# When HAL changes are needed pending upstream:
+# [patch.crates-io]
+# edgefirst-hal     = { path = "../hal/crates/hal" }
+# edgefirst-tensor  = { path = "../hal/crates/tensor" }
+# edgefirst-image   = { path = "../hal/crates/image" }
+# edgefirst-decoder = { path = "../hal/crates/decoder" }
+# edgefirst-codec   = { path = "../hal/crates/codec" }

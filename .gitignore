@@ -1,0 +1,10 @@
+/target
+Cargo.lock
+.zcode/
+.DS_Store
+
+# Bundled example model weights (64 MB of ONNX blobs) — excluded from the public
+# repo to keep history lean. They are only needed to build examples/ultralytics
+# standalone, not to consume the `edgefirst-burn` crate. Drop them back in (or
+# fetch at build time) if you want the example self-contained.
+examples/ultralytics/src/model/*.onnx
