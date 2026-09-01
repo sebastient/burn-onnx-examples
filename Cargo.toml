@@ -40,11 +40,11 @@ burn-onnx = { git = "https://github.com/sebastient/burn-onnx", branch = "burn-on
 burn-onnx-runtime = { git = "https://github.com/sebastient/burn-onnx", branch = "burn-onnx-runtime", default-features = false }
 
 # HAL
-edgefirst-hal = "0.27"
-edgefirst-tensor = "0.27"
-edgefirst-image = "0.27"
-edgefirst-decoder = "0.27"
-edgefirst-codec = "0.27"
+edgefirst-hal = "0.28"
+edgefirst-tensor = "0.28"
+edgefirst-image = "0.28"
+edgefirst-decoder = "0.28"
+edgefirst-codec = "0.28"
 
 # Common
 half = "2"
