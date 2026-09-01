@@ -85,7 +85,12 @@ fn assert_parity(codegen_out: &Tensor<3>, runtime_out: &Tensor<3>, model: &str) 
             "{model}: element {i} diverges: codegen={x} runtime={y} abs={abs} rel={rel}"
         );
     }
-    eprintln!("{model}: parity ok ({:.2e} max abs, {:.2e} max rel over {} elems)", max_diff, max_rel, a.len());
+    eprintln!(
+        "{model}: parity ok ({:.2e} max abs, {:.2e} max rel over {} elems)",
+        max_diff,
+        max_rel,
+        a.len()
+    );
 }
 
 #[test]

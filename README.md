@@ -14,6 +14,21 @@ detection models end-to-end — preprocessing, inference, and decode + NMS —
 through two interchangeable execution paths: build-time codegen and runtime
 graph execution.
 
+![YOLO26 detections on zidane.jpg, boxes drawn by EdgeFirst HAL](examples/ultralytics/assets/zidane_overlays.jpg)
+
+> The image above is this repository's output, end to end: YOLO26n running on
+> the Burn framework through
+> [`burn-onnx-runtime`](https://github.com/sebastient/burn-onnx/tree/burn-onnx-runtime)
+> (the ONNX file loaded at **runtime**, no codegen), detections decoded and the
+> bounding boxes drawn by the [EdgeFirst HAL](https://github.com/EdgeFirstAI/hal).
+> Regenerate it with:
+>
+> ```bash
+> cargo run --release -p ultralytics --bin runtime_inference -- yolo26n fp32 \
+>     --input examples/ultralytics/assets/zidane.jpg \
+>     --output examples/ultralytics/assets/zidane_overlays.jpg
+> ```
+
 > **Status.** The default build uses upstream `tracel-ai/burn` plus the
 > `burn-onnx-runtime` proposal branch. Only the zero-copy `IOSurface` import on
 > macOS Metal (`pipeline/metal-iosurface`) still requires forked `burn`/`cubecl`
@@ -145,6 +160,7 @@ Options:
   --warmup <N>       Warmup runs before timing (benchmark mode only)              [default: 3]
   --runs <N>         1 = single detection run; N>1 = benchmark mode               [default: 1]
   --debug            Print input/output tensor statistics
+  --output <PATH>    Save the input image with detection overlays drawn by HAL (JPEG)
 ```
 
 ### Parity test

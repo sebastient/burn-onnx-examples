@@ -25,14 +25,14 @@
 use burn::tensor::Device;
 use clap::Parser;
 use edgefirst_hal as hal;
-use ultralytics::pipeline::{run_pipeline, Args, RuntimeModel};
+use ultralytics::pipeline::Arch;
+use ultralytics::pipeline::Precision;
+use ultralytics::pipeline::{Args, RuntimeModel, run_pipeline};
 use ultralytics::{
     YOLO11N_T_B8B_FP16_ONNX, YOLO11N_T_B8B_FP32_ONNX, YOLO26N_T_B8F_FP16_ONNX,
     YOLO26N_T_B8F_FP32_ONNX, YOLOV5N_T_B7B_FP16_ONNX, YOLOV5N_T_B7B_FP32_ONNX,
     YOLOV8N_T_B86_FP16_ONNX, YOLOV8N_T_B86_FP32_ONNX,
 };
-use ultralytics::pipeline::Arch;
-use ultralytics::pipeline::Precision;
 
 fn main() {
     let args = Args::parse();

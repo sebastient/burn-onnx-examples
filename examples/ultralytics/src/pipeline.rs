@@ -27,9 +27,9 @@ use std::time::Instant;
 use burn::tensor::{DType, Device, Tensor};
 use burn_onnx_runtime::{FloatTensor, GraphExecutor, Value};
 use clap::{Parser, ValueEnum};
-use pipeline as eb;
-use edgefirst_codec::{peek_info, ImageDecoder, ImageLoad};
+use edgefirst_codec::{ImageDecoder, ImageLoad, peek_info};
 use edgefirst_hal as hal;
+use pipeline as eb;
 
 use crate::model::{
     yolo11n_t_b8b_fp16, yolo11n_t_b8b_fp32, yolo26n_t_b8f_fp16, yolo26n_t_b8f_fp32,
@@ -105,6 +105,10 @@ pub struct Args {
     /// Print input/output tensor statistics for debugging.
     #[arg(long)]
     pub debug: bool,
+    /// Save a copy of the input image with the detection overlays drawn by
+    /// HAL (`draw_decoded_masks`), encoded as JPEG at the given path.
+    #[arg(long)]
+    pub output: Option<String>,
 }
 
 // ─── Latency statistics ──────────────────────────────────────────────────────
@@ -256,10 +260,7 @@ impl InferenceModel for RuntimeModel {
     fn forward(&self, input: Tensor<4>) -> Tensor<3> {
         let mut inputs = HashMap::new();
         inputs.insert(self.input_name.clone(), Value::from(input));
-        let outputs = self
-            .executor
-            .forward(inputs)
-            .expect("runtime forward");
+        let outputs = self.executor.forward(inputs).expect("runtime forward");
         match outputs.get(&self.output_name).expect("runtime output") {
             Value::Float(FloatTensor::R3(t)) => t.clone(),
             other => panic!("expected rank-3 output, got rank {}", other.rank()),
@@ -380,12 +381,60 @@ pub fn run_pipeline<M: InferenceModel>(
                 b.label, b.score, x1, y1, x2, y2
             );
         }
-        Ok::<(), Box<dyn std::error::Error>>(())
+        Ok::<_, Box<dyn std::error::Error>>((boxes_, masks, *letterbox))
     });
 
-    match result {
-        Ok(Ok(())) => Ok(()),
-        Ok(Err(e)) => Err(e),
-        Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>),
+    let (boxes_, masks, letterbox) = match result {
+        Ok(Ok(v)) => v,
+        Ok(Err(e)) => return Err(e),
+        Err(e) => return Err(Box::new(e) as Box<dyn std::error::Error>),
+    };
+
+    if let Some(path) = &args.output {
+        // Same render recipe as the ara2-rs / tflite-rs HAL examples: an RGBA
+        // canvas at source resolution, the source image as the overlay
+        // background, and the letterbox transform mapping detections back to
+        // source coordinates; the canvas is then encoded as JPEG.
+        use eb::htensor::{CpuAccess, DType as HalDType, PixelFormat};
+        use eb::image::ImageProcessorTrait as _;
+        let mut canvas = processor.create_image(
+            letterbox.src_w,
+            letterbox.src_h,
+            PixelFormat::Rgba,
+            HalDType::U8,
+            None,
+            CpuAccess::Read,
+        )?;
+        // Convert the native-format source (typically NV12 from the JPEG
+        // decoder) to an RGBA background matching the canvas shape/format.
+        let mut background = processor.create_image(
+            letterbox.src_w,
+            letterbox.src_h,
+            PixelFormat::Rgba,
+            HalDType::U8,
+            None,
+            CpuAccess::Read,
+        )?;
+        processor.convert(
+            src,
+            &mut background,
+            eb::image::Rotation::None,
+            eb::image::Flip::None,
+            eb::image::Crop::default(),
+        )?;
+        eb::draw_detections_over(
+            processor,
+            &mut canvas,
+            &background,
+            &boxes_,
+            &masks,
+            0.5,
+            eb::image::ColorMode::Class,
+            Some(&letterbox),
+        )?;
+        eb::image::save_jpeg(&canvas, path, 95)?;
+        println!("wrote {path}");
     }
+
+    Ok(())
 }

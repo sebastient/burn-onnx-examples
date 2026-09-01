@@ -34,11 +34,10 @@ use ultralytics::model::{
     yolo11n_t_b8b_fp16, yolo11n_t_b8b_fp32, yolo26n_t_b8f_fp16, yolo26n_t_b8f_fp32,
     yolov5n_t_b7b_fp16, yolov5n_t_b7b_fp32, yolov8n_t_b86_fp16, yolov8n_t_b86_fp32,
 };
-use ultralytics::pipeline::{run_pipeline, Arch, Args, CodegenModel, Precision};
+use ultralytics::pipeline::{Arch, Args, CodegenModel, Precision, run_pipeline};
 use ultralytics::{
     YOLO11N_T_B8B_FP16_BPK, YOLO11N_T_B8B_FP32_BPK, YOLO26N_T_B8F_FP16_BPK, YOLO26N_T_B8F_FP32_BPK,
-    YOLOV5N_T_B7B_FP16_BPK, YOLOV5N_T_B7B_FP32_BPK, YOLOV8N_T_B86_FP16_BPK,
-    YOLOV8N_T_B86_FP32_BPK,
+    YOLOV5N_T_B7B_FP16_BPK, YOLOV5N_T_B7B_FP32_BPK, YOLOV8N_T_B86_FP16_BPK, YOLOV8N_T_B86_FP32_BPK,
 };
 
 fn main() {
