@@ -1,20 +1,20 @@
 # Architecture
 
-This document describes the high-level architecture of `edgefirst-burn`: how it
+This document describes the high-level architecture of `pipeline`: how it
 bridges [edgefirst-hal](https://crates.io/crates/edgefirst-hal) (hardware-accelerated
 image preprocessing) and [Burn](https://github.com/tracel-ai/burn) (deep-learning
 compute), and the upstream forks that the zero-copy path requires.
 
-For the crate API, see [`crates/edgefirst-burn/README.md`](crates/edgefirst-burn/README.md).
+For the crate API, see [`crates/pipeline/README.md`](crates/pipeline/README.md).
 For usage, see the root [`README.md`](README.md).
 
 ## Overview
 
-`edgefirst-burn` is the glue layer in this stack:
+`pipeline` is the glue layer in this stack:
 
 ```
  ┌──────────┐   HAL ImageProcessor   ┌─────────────────┐   Burn model   ┌─────────────┐
- │  source  │ ─────────────────────► │  edgefirst-burn │ ─────────────► │   decode    │
+ │  source  │ ─────────────────────► │  pipeline │ ─────────────► │   decode    │
  │  image   │   letterbox + convert  │  (this crate)   │   Tensor<4>    │  + NMS      │
  │ (JPEG/…) │                        │  import tensor  │                │ (HAL host)  │
  └──────────┘                        └─────────────────┘                └─────────────┘
@@ -36,7 +36,7 @@ The crate does **three** things:
    HAL `TensorDyn`, and run HAL's YOLO decode + NMS to get `DetectBox`es.
 
 The application owns step 2's middle — the actual `model.forward(input)` — so
-`edgefirst-burn` never depends on a specific model. The Ultralytics examples
+`pipeline` never depends on a specific model. The Ultralytics examples
 ([`examples/ultralytics/`](examples/ultralytics/)) wire that middle in.
 
 ## The asymmetric zero-copy design
@@ -80,7 +80,7 @@ references that allocation on the zero-copy path — cannot outlive it.
 
 ## Module map
 
-`crates/edgefirst-burn/src/`:
+`crates/pipeline/src/`:
 
 | Module | Responsibility | Key item |
 |---|---|---|
@@ -181,7 +181,7 @@ The workspace `Cargo.toml` carries:
 
 ## Feature flags
 
-The crate (`crates/edgefirst-burn`):
+The crate (`crates/pipeline`):
 
 | Feature | Effect |
 |---|---|
@@ -189,7 +189,7 @@ The crate (`crates/edgefirst-burn`):
 | `test` | Enables `burn/flex` so unit/integration tests can construct tensors on a CPU backend. |
 
 The `ultralytics` example package additionally defines a `metal` feature
-(`burn/metal` + `edgefirst-burn/metal-iosurface`) as the user-facing toggle for
+(`burn/metal` + `pipeline/metal-iosurface`) as the user-facing toggle for
 the Metal zero-copy path; see its
 [`Cargo.toml`](examples/ultralytics/Cargo.toml).
 
@@ -197,8 +197,8 @@ the Metal zero-copy path; see its
 
 ```bash
 # Integration crate (CPU flex backend).
-cargo build -p edgefirst-burn
-cargo test  -p edgefirst-burn --features test
+cargo build -p pipeline
+cargo test  -p pipeline --features test
 
 # Examples — default (CPU flex).
 cargo run --release -p ultralytics --bin codegen_inference -- yolo11n fp32 --input image.jpg

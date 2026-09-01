@@ -179,7 +179,7 @@ fn letterbox_region(src_w: usize, src_h: usize, dst_w: usize, dst_h: usize) -> [
 /// # Example
 ///
 /// ```no_run
-/// # use edgefirst_burn as eb;
+/// # use pipeline as eb;
 /// # use burn::tensor::Tensor;
 /// # fn example(processor: &mut eb::image::ImageProcessor, src: &mut eb::htensor::TensorDyn, device: &burn::tensor::Device) -> eb::Result<()> {
 /// let cfg = eb::PreprocessConfig::yolo(640, 640);

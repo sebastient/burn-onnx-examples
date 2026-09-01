@@ -1,5 +1,5 @@
 [package]
-name = "edgefirst-burn"
+name = "pipeline"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -33,5 +33,5 @@ metal-iosurface = ["burn/metal", "burn/cubecl", "burn-cubecl"]
 test = ["burn/flex"]
 
 [lib]
-name = "edgefirst_burn"
+name = "pipeline"
 path = "src/lib.rs"

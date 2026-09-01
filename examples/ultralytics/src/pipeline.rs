@@ -5,7 +5,7 @@
 //!
 //! 1. Load a JPEG/PNG via `edgefirst-codec` into a HAL `TensorDyn`.
 //! 2. HAL `ImageProcessor::convert` (letterbox + format conversion) → Burn input
-//!    `Tensor<4>` via [`edgefirst_burn::with_image_tensor`] (zero-copy
+//!    `Tensor<4>` via [`pipeline::with_image_tensor`] (zero-copy
 //!    `IOSurface` import on macOS Metal, host upload otherwise).
 //! 3. Run the model's `forward` (this is the only thing that differs between the
 //!    two binaries — how the model is constructed).
@@ -27,7 +27,7 @@ use std::time::Instant;
 use burn::tensor::{DType, Device, Tensor};
 use burn_onnx_runtime::{FloatTensor, GraphExecutor, Value};
 use clap::{Parser, ValueEnum};
-use edgefirst_burn as eb;
+use pipeline as eb;
 use edgefirst_codec::{peek_info, ImageDecoder, ImageLoad};
 use edgefirst_hal as hal;
 
@@ -272,16 +272,16 @@ impl InferenceModel for RuntimeModel {
 /// Build the preprocessing config for the requested dtype. On macOS Metal (with
 /// the `metal` feature) the IOSurface-backed convert target only supports
 /// `PlanarRgb`/`F16`, so the F16 target is forced regardless of the model dtype
-/// — `edgefirst-burn` casts back to the model's dtype on-GPU after the import.
+/// — `pipeline` casts back to the model's dtype on-GPU after the import.
 pub fn preprocess_config(dtype: DType) -> eb::PreprocessConfig {
     let cfg = match dtype {
         DType::F16 => eb::PreprocessConfig::yolo_f16(640, 640),
         _ => eb::PreprocessConfig::yolo(640, 640),
     };
     // On macOS Metal, request an IOSurface-backed convert target (Dma) so the
-    // edgefirst-burn import is zero-copy. macOS IOSurface only supports
+    // pipeline import is zero-copy. macOS IOSurface only supports
     // PlanarRgb at F16, so the F16 convert target is forced for fp32 models —
-    // edgefirst-burn casts back to the model's dtype on-GPU after the import.
+    // pipeline casts back to the model's dtype on-GPU after the import.
     #[cfg(all(target_os = "macos", feature = "metal"))]
     let cfg = cfg.with_memory(edgefirst_tensor::TensorMemory::Dma);
     cfg

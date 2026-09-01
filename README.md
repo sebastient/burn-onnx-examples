@@ -1,18 +1,23 @@
-# edgefirst-burn
+# burn-onnx-examples
 
-Zero-copy integration between [edgefirst-hal](https://crates.io/crates/edgefirst-hal)
-and the [Burn](https://github.com/tracel-ai/burn) deep-learning framework.
+Models ported to the [Burn](https://github.com/tracel-ai/burn) ONNX **runtime**
+([`burn-onnx-runtime`](https://github.com/sebastient/burn-onnx/tree/burn-onnx-runtime))
+and **codegen** ([`burn-onnx`](https://github.com/tracel-ai/burn-onnx)) paths, using the
+open-source [EdgeFirst HAL](https://github.com/EdgeFirstAI/hal) crates for
+hardware-accelerated pre-processing and post-processing.
 
-`edgefirst-burn` bridges HAL's hardware-accelerated image-preprocessing pipeline
-(convert targets backed by `IOSurface` on macOS, `dma-buf` on Linux) and Burn's
-compute backends, so a HAL-converted image can feed a Burn model with **no
-host-side copy** on the input path. It targets [Ultralytics](https://www.ultralytics.com/)
-YOLO detection models end-to-end — preprocessing, inference, and decode + NMS.
+The `pipeline` crate bridges HAL's image-preprocessing pipeline (convert targets
+backed by `IOSurface` on macOS, `dma-buf` on Linux) and Burn's compute backends,
+so a HAL-converted image can feed a Burn model with **no host-side copy** on the
+input path. The examples target [Ultralytics](https://www.ultralytics.com/) YOLO
+detection models end-to-end — preprocessing, inference, and decode + NMS —
+through two interchangeable execution paths: build-time codegen and runtime
+graph execution.
 
-> **Status — forked dependencies.** The zero-copy `IOSurface` import on macOS
-> Metal currently requires EdgeFirst forks of `burn`, `cubecl`, and `burn-onnx`,
-> carried as local path patches until the upstream PRs merge. The host fallback
-> path (no `metal` feature) works with upstream crates alone. See
+> **Status.** The default build uses upstream `tracel-ai/burn` plus the
+> `burn-onnx-runtime` proposal branch. Only the zero-copy `IOSurface` import on
+> macOS Metal (`pipeline/metal-iosurface`) still requires forked `burn`/`cubecl`
+> branches — swap the dependency blocks in `Cargo.toml` as commented there. See
 > [Required forks](ARCHITECTURE.md#required-forks-and-upstream-prs) in
 > `ARCHITECTURE.md`.
 
@@ -22,11 +27,11 @@ This is a Cargo workspace.
 
 | Member | Description |
 |---|---|
-| [`crates/edgefirst-burn`](crates/edgefirst-burn/) | The published integration crate — the HAL↔Burn bridge. |
+| [`crates/pipeline`](crates/pipeline/) | The published integration crate — the HAL↔Burn bridge. |
 | [`examples/ultralytics`](examples/ultralytics/) | End-to-end YOLO examples (codegen + runtime paths) over 8 model variants. |
 
 The crate-level API documentation lives at
-[`crates/edgefirst-burn/README.md`](crates/edgefirst-burn/README.md); the
+[`crates/pipeline/README.md`](crates/pipeline/README.md); the
 high-level design lives at [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Prerequisites
@@ -50,10 +55,10 @@ high-level design lives at [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ```bash
 # Build the integration crate (CPU flex backend — cross-platform, CI-safe).
-cargo build -p edgefirst-burn
+cargo build -p pipeline
 
 # Run the crate's unit + integration tests.
-cargo test -p edgefirst-burn --features test
+cargo test -p pipeline --features test
 ```
 
 ## Using the ultralytics examples
@@ -72,8 +77,12 @@ Both accept the same arguments and support the same backends.
 
 ### Models
 
-All 8 variants ship as ONNX (opset 13, input `images [1,3,640,640]`, output
-`[1,84,8400]`) in `examples/ultralytics/src/model/`:
+The examples use 8 variants as ONNX (opset 13, input `images [1,3,640,640]`,
+output `[1,84,8400]`), expected in `examples/ultralytics/src/model/`. The weight
+files are **not committed** (see Licensing below): download them from the
+[EdgeFirst Model Zoo](https://huggingface.co/spaces/EdgeFirst/Models), or export
+your own with `scripts/export-yolo.sh` (uses `pip install ultralytics` in a
+local venv) and rename to match:
 
 | Architecture | fp16 file | fp32 file |
 |---|---|---|
@@ -107,9 +116,9 @@ cargo run --release -p ultralytics --bin codegen_inference -- \
 ### macOS Metal (zero-copy IOSurface import)
 
 On macOS, enable the example's `metal` feature to use Burn's Metal backend and
-`edgefirst-burn`'s zero-copy `IOSurface` import. HAL's `ImageProcessor::convert`
+`pipeline`'s zero-copy `IOSurface` import. HAL's `ImageProcessor::convert`
 writes directly to an `IOSurface`-backed `PlanarRgb`/`F16` tensor;
-`edgefirst-burn` imports that `IOSurface` into a Burn Metal tensor via
+`pipeline` imports that `IOSurface` into a Burn Metal tensor via
 `newBufferWithBytesNoCopy` (no host copy), then casts F16→F32 on-GPU for fp32
 models.
 
@@ -119,7 +128,7 @@ cargo run --release -p ultralytics --features metal --bin codegen_inference -- \
 ```
 
 > `--features metal` resolves to the `ultralytics` package's own `metal` feature,
-> which enables `burn/metal` + `edgefirst-burn/metal-iosurface`. Requires the
+> which enables `burn/metal` + `pipeline/metal-iosurface`. Requires the
 > EdgeFirst forks of `burn` and `cubecl` (see Prerequisites).
 
 ### Shared CLI
@@ -156,7 +165,7 @@ cargo test -p ultralytics
 score threshold, while `yolo11n` and `yolov5n` are correct. This reproduces with
 the pure-f32 host-fallback path on Metal (no IOSurface, no F16), so it is a
 burn/cubecl Metal execution issue in yolov8n's specific op sequence — not a HAL
-or `edgefirst-burn` bug. See
+or `pipeline` bug. See
 [`examples/ultralytics/README.md`](examples/ultralytics/README.md#known-issue-yolov8n-on-the-metal-backend)
 for the full diagnosis.
 
@@ -171,22 +180,36 @@ for the full diagnosis.
 | [`draw_detections_over`] | Render boxes/masks composited over a background image |
 | [`tensordyn_from_burn`] | Low-level Burn → HAL `TensorDyn` host bridge (any backend) |
 
-See [`crates/edgefirst-burn/README.md`](crates/edgefirst-burn/README.md) and the
-crate rustdoc (`cargo doc -p edgefirst-burn --open`) for full signatures,
+See [`crates/pipeline/README.md`](crates/pipeline/README.md) and the
+crate rustdoc (`cargo doc -p pipeline --open`) for full signatures,
 constraints, and the IOSurface format / autotune-fallback notes.
 
 ## Documentation
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — high-level design, data flow, the
   zero-copy import mechanism, and the required forks + upstream PRs.
-- [`crates/edgefirst-burn/README.md`](crates/edgefirst-burn/README.md) — the
+- [`crates/pipeline/README.md`](crates/pipeline/README.md) — the
   crate's detailed API doc (design table, features, quick starts, constraints).
 - [`examples/ultralytics/README.md`](examples/ultralytics/README.md) — the
   examples' model table, usage, and the yolov8n-on-Metal diagnosis.
-- Crate rustdoc: `cargo doc -p edgefirst-burn --open`.
+- Crate rustdoc: `cargo doc -p pipeline --open`.
 
 ## License
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
 
 `SPDX-License-Identifier: Apache-2.0`
+
+## Licensing
+
+Everything in this repository — the examples, the `pipeline` HAL↔Burn bridge,
+and the EdgeFirst stack it builds on — is **Apache-2.0**, and the stack runs
+other models as well as Ultralytics.
+
+The Ultralytics YOLO models themselves are **AGPL-3.0** (or Ultralytics'
+commercial licence), and that holds regardless of where you get the weights:
+exported locally with `pip install ultralytics`, or downloaded from the
+[EdgeFirst Model Zoo](https://huggingface.co/spaces/EdgeFirst/Models), which
+distributes the same weights under the same licence. This repository never
+redistributes model weights; fetching them is on you, as is using them within
+the Ultralytics licence terms.

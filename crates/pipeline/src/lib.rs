@@ -32,16 +32,16 @@
 //! `forward`:
 //!
 //! ```no_run
-//! # use edgefirst_burn as eb;
+//! # use pipeline as eb;
 //! # use burn::tensor::{Device, Tensor};
 //! # use edgefirst_hal as hal;
-//! # use edgefirst_burn::htensor::{CpuAccess, DType as HalDType, PixelFormat, TensorMemory};
+//! # use pipeline::htensor::{CpuAccess, DType as HalDType, PixelFormat, TensorMemory};
 //! # fn example(device: Device) -> eb::Result<()> {
 //! // 1. Load a source image as a HAL TensorDyn.
 //! let mut src = hal::tensor::TensorDyn::image(
 //!     640, 480, PixelFormat::Rgb, HalDType::U8,
 //!     Some(TensorMemory::Mem), CpuAccess::ReadWrite)?;
-//! // 2. HAL converts + letterboxes; edgefirst-burn builds the burn input tensor.
+//! // 2. HAL converts + letterboxes; pipeline builds the burn input tensor.
 //! let mut processor = hal::image::ImageProcessor::new()?;
 //! let cfg = eb::PreprocessConfig::yolo(640, 640);
 //! eb::with_image_tensor(&mut processor, &mut src, &cfg, &device, |input, letterbox| {
@@ -63,7 +63,7 @@
 //! `burn_onnx_runtime::GraphExecutor` — no build-time codegen, no `.bpk`:
 //!
 //! ```text
-//! # use edgefirst_burn as eb;
+//! # use pipeline as eb;
 //! # use burn::tensor::{Device, Tensor};
 //! # use edgefirst_hal as hal;
 //! # use std::collections::HashMap;
@@ -158,7 +158,7 @@ pub enum Error {
 
     /// Zero-copy IOSurface import was requested but is not available in this
     /// build (the `metal-iosurface` feature is off, or the platform is not
-    /// macOS). Re-run with `--features edgefirst-burn/metal-iosurface` on macOS,
+    /// macOS). Re-run with `--features pipeline/metal-iosurface` on macOS,
     /// or use the host fallback.
     #[error("IOSurface zero-copy import is not available in this build")]
     IoSurfaceUnavailable,

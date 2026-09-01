@@ -1,8 +1,8 @@
-# edgefirst-burn
+# pipeline
 
 Zero-copy integration between [edgefirst-hal](https://crates.io/crates/edgefirst-hal) and the [Burn](https://github.com/tracel-ai/burn) deep-learning framework.
 
-`edgefirst-burn` bridges HAL's hardware-accelerated image-preprocessing pipeline (convert targets backed by `IOSurface` on macOS, `dma-buf` on Linux) and Burn's compute backends, so that a HAL-converted image can feed a Burn model with **no host-side copy** on the input path.
+`pipeline` bridges HAL's hardware-accelerated image-preprocessing pipeline (convert targets backed by `IOSurface` on macOS, `dma-buf` on Linux) and Burn's compute backends, so that a HAL-converted image can feed a Burn model with **no host-side copy** on the input path.
 
 ## Design
 
@@ -21,7 +21,7 @@ The asymmetry is by design: HAL already owns the GPU-resident converted image, s
 ## Quick start — ONNX codegen path
 
 ```rust,ignore
-use edgefirst_burn as eb;
+use pipeline as eb;
 use burn::tensor::{Device, Tensor};
 use edgefirst_hal as hal;
 
@@ -79,7 +79,7 @@ if let Value::Float(FloatTensor::R3(out)) = outputs.get(&output_name).unwrap() {
 
 ## Normalization
 
-HAL owns normalization. Its U8→F32/F16 convert **already normalizes pixel values to `[0,1]`** (x/255), which is exactly what ultralytics models expect. `edgefirst-burn` applies no additional scaling. If a future model needs ImageNet-style mean/std, that support will be added directly to HAL so the whole pipeline stays zero-copy up to the model input.
+HAL owns normalization. Its U8→F32/F16 convert **already normalizes pixel values to `[0,1]`** (x/255), which is exactly what ultralytics models expect. `pipeline` applies no additional scaling. If a future model needs ImageNet-style mean/std, that support will be added directly to HAL so the whole pipeline stays zero-copy up to the model input.
 
 ## IOSurface format constraint (macOS Metal zero-copy)
 
@@ -103,7 +103,7 @@ The zero-copy path requires three fork branches (all `ef/iosurface-import`):
 |---|---|---|
 | **cubecl** | `sebastient/cubecl` | IOSurface import (`WgpuClientExt`), autotune fallback, `ComputeClient::submit_blocking` |
 | **burn** | `tracel-ai/burn` | `Device::as_dispatch` public, `FusionTensor::from_handle` |
-| **edgefirst-burn** | `EdgeFirstAI/edgefirst-burn` | This crate |
+| **pipeline** | `sebastient/burn-onnx-examples` | This crate |
 
 The consuming project's `Cargo.toml` carries `[patch]` tables pointing at the local clones. See the `codegen_inference` / `runtime_inference` examples for a working configuration.
 

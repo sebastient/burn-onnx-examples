@@ -1,31 +1,41 @@
 [workspace]
 resolver = "2"
-members = ["crates/edgefirst-burn", "examples/ultralytics"]
-default-members = ["crates/edgefirst-burn"]
+members = ["crates/pipeline", "examples/ultralytics"]
+default-members = ["crates/pipeline"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["EdgeFirst Contributors"]
+authors = ["Sébastien Taylor (@sebastient)"]
 license = "Apache-2.0"
-homepage = "https://edgefirst.ai"
-repository = "https://github.com/EdgeFirstAI/edgefirst-burn"
+homepage = "https://github.com/sebastient/burn-onnx-examples"
+repository = "https://github.com/sebastient/burn-onnx-examples"
 readme = "README.md"
 keywords = ["edge-ai", "machine-learning", "burn", "hal", "zero-copy"]
 categories = ["science", "multimedia::images"]
 
 [workspace.dependencies]
 # Internal
-edgefirst-burn = { path = "crates/edgefirst-burn" }
+pipeline = { path = "crates/pipeline" }
 
-# Burn resolves from the sebastient/burn fork by branch — the same branch
-# burn-onnx pins — so the whole graph unifies on one burn/cubecl instance.
-burn = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
-burn-cubecl = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
-burn-store = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
-burn-tensor = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+# Burn resolves from the same tracel-ai rev the burn-onnx branch pins, so the
+# whole graph unifies on one burn instance. Keep this rev in sync with
+# sebastient/burn-onnx@burn-onnx-runtime's workspace Cargo.toml.
+burn = { git = "https://github.com/tracel-ai/burn", rev = "a8e1b8a64774f2d33d99d263d0784467d0d57b55", default-features = false }
+burn-cubecl = { git = "https://github.com/tracel-ai/burn", rev = "a8e1b8a64774f2d33d99d263d0784467d0d57b55", default-features = false }
+burn-store = { git = "https://github.com/tracel-ai/burn", rev = "a8e1b8a64774f2d33d99d263d0784467d0d57b55", default-features = false }
+burn-tensor = { git = "https://github.com/tracel-ai/burn", rev = "a8e1b8a64774f2d33d99d263d0784467d0d57b55", default-features = false }
 
-# burn-onnx crates from the sebastient/burn-onnx fork.
+### Zero-copy IOSurface import (`pipeline/metal-iosurface`) needs the patched ###
+### burn/cubecl forks until that work lands upstream. To use it, swap the     ###
+### burn family above for the fork block below and uncomment the cubecl       ###
+### [patch] section at the bottom of this file.                               ###
+# burn = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+# burn-cubecl = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+# burn-store = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+# burn-tensor = { git = "https://github.com/sebastient/burn", branch = "feat/iosurface-import", default-features = false }
+
+# burn-onnx crates from the sebastient/burn-onnx fork (proposal branch).
 burn-onnx = { git = "https://github.com/sebastient/burn-onnx", branch = "burn-onnx-runtime", default-features = false }
 burn-onnx-runtime = { git = "https://github.com/sebastient/burn-onnx", branch = "burn-onnx-runtime", default-features = false }
 
@@ -43,28 +53,28 @@ bytemuck = "1"
 clap = { version = "4", features = ["derive"] }
 float-cmp = "0.10.0"
 
-# cubek still pins its cubecl dependency by the upstream tracel-ai URL; redirect
-# that onto the sebastient/cubecl fork branch so cubek and burn resolve one
-# shared cubecl instance (avoids duplicate cubecl-core / cubecl-ir trait impls).
-# burn itself now points at the sebastient fork directly (see workspace deps
-# above), so no tracel-ai/burn patch is needed.
-[patch."https://github.com/tracel-ai/cubecl"]
-cubecl = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-common = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-core = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-cpp = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-cpu = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-cuda = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-hip = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-ir = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-macros = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-macros-internal = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-opt = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-runtime = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-spirv = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-std = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-wgpu = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
-cubecl-zspace = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubek pins its cubecl dependency by the upstream tracel-ai URL; when building
+# with the fork block above (metal-iosurface), redirect cubecl onto the
+# sebastient/cubecl fork branch so cubek and burn resolve one shared cubecl
+# instance (avoids duplicate cubecl-core / cubecl-ir trait impls). Leave this
+# commented for the default tracel-ai build.
+# [patch."https://github.com/tracel-ai/cubecl"]
+# cubecl = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-common = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-core = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-cpp = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-cpu = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-cuda = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-hip = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-ir = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-macros = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-macros-internal = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-opt = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-runtime = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-spirv = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-std = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-wgpu = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
+# cubecl-zspace = { git = "https://github.com/sebastient/cubecl", branch = "feat/iosurface-import" }
 
 # When HAL changes are needed pending upstream:
 # [patch.crates-io]

@@ -1,6 +1,6 @@
 //! End-to-end host-pipeline integration test (no GPU zero-copy, no model).
 //!
-//! Exercises the full edgefirst-burn glue on CPU:
+//! Exercises the full pipeline glue on CPU:
 //! 1. Synthesize a HAL RGB source image.
 //! 2. `with_image_tensor` converts it to PlanarRgb F32 and builds a burn tensor.
 //! 3. Synthesize a `[1, 84, 8400]` burn output tensor (a fake model output).
@@ -15,7 +15,7 @@
 #![cfg(feature = "test")]
 
 use burn::tensor::{Device, Tensor};
-use edgefirst_burn::{
+use pipeline::{
     decoder::DecoderVersion,
     htensor::{self, CpuAccess, DType as HalDType, PixelFormat, TensorMemory, TensorTrait},
     image::ImageProcessor,

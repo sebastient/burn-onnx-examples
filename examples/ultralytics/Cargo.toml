@@ -8,17 +8,17 @@ publish = false
 [features]
 default = ["burn/flex", "burn/vision"]
 # Zero-copy HAL + Metal integration (macOS).
-metal = ["burn/metal", "edgefirst-burn/metal-iosurface"]
+metal = ["burn/metal", "pipeline/metal-iosurface"]
 
 [dependencies]
 burn = { workspace = true, features = ["flex", "vision"] }
 burn-onnx-runtime = { workspace = true, features = ["default"] }
-burn-store = { workspace = true, features = ["std", "burnpack"] }
+burn-store = { workspace = true, features = ["std"] }
 clap = { workspace = true }
 bytemuck = { workspace = true }
 
 # HAL integration
-edgefirst-burn = { workspace = true }
+pipeline = { workspace = true }
 edgefirst-hal = { workspace = true }
 edgefirst-tensor = { workspace = true }
 edgefirst-image = { workspace = true }
