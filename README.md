@@ -27,7 +27,7 @@ This is a Cargo workspace.
 
 | Member | Description |
 |---|---|
-| [`crates/pipeline`](crates/pipeline/) | The published integration crate — the HAL↔Burn bridge. |
+| [`crates/pipeline`](crates/pipeline/) | The HAL↔Burn integration crate — preprocessing, postprocessing, tensor import/export. |
 | [`examples/ultralytics`](examples/ultralytics/) | End-to-end YOLO examples (codegen + runtime paths) over 8 model variants. |
 
 The crate-level API documentation lives at
@@ -37,19 +37,14 @@ high-level design lives at [`ARCHITECTURE.md`](ARCHITECTURE.md).
 ## Prerequisites
 
 - **Rust toolchain** (edition 2021 for the crate, 2024 for the example).
-- For the zero-copy Metal path: **macOS** with a Metal-capable GPU.
-- The three sibling checkouts, on the branches below, as **siblings of this
-  repo** so the workspace `[patch]` tables resolve to local paths:
-
-  | Repo | Checked out at | Branch |
-  |---|---|---|
-  | [tracel-ai/burn](https://github.com/tracel-ai/burn) | `../burn` | `ef/iosurface-import` |
-  | [cubecl](https://github.com/tracel-ai/cubecl) (via `sebastient/cubecl`) | `../cubecl` | `ef/iosurface-import` |
-  | [tracel-ai/burn-onnx](https://github.com/tracel-ai/burn-onnx) | `../burn-onnx` | `feat/burn-onnx-runtime` |
-
-  These branches carry the changes described in
-  [Required forks](ARCHITECTURE.md#required-forks-and-upstream-prs). The branch
-  names are read from the workspace `Cargo.toml` `[patch]` tables.
+- The default build needs nothing else: every dependency resolves from git or
+  crates.io (upstream `tracel-ai/burn` plus the
+  [`burn-onnx-runtime`](https://github.com/sebastient/burn-onnx/tree/burn-onnx-runtime)
+  proposal branch).
+- For the zero-copy Metal path only: **macOS** with a Metal-capable GPU, plus
+  the forked `burn`/`cubecl` branches — swap the dependency blocks in the
+  workspace `Cargo.toml` as commented there (see
+  [Required forks](ARCHITECTURE.md#required-forks-and-upstream-prs)).
 
 ## Getting started
 
@@ -128,8 +123,8 @@ cargo run --release -p ultralytics --features metal --bin codegen_inference -- \
 ```
 
 > `--features metal` resolves to the `ultralytics` package's own `metal` feature,
-> which enables `burn/metal` + `pipeline/metal-iosurface`. Requires the
-> EdgeFirst forks of `burn` and `cubecl` (see Prerequisites).
+> which enables `burn/metal` + `pipeline/metal-iosurface`. Requires the forked
+> `burn` and `cubecl` branches (see Prerequisites).
 
 ### Shared CLI
 
