@@ -88,12 +88,15 @@ local venv) and rename to match:
 
 ### Run an inference
 
+A sample image ships in `examples/ultralytics/assets/` (`zidane.jpg`, the
+classic sample from the [Ultralytics repository](https://github.com/ultralytics/ultralytics)):
+
 ```bash
 # Codegen path — single detection run on the CPU flex backend (default).
-cargo run --release -p ultralytics --bin codegen_inference -- yolo11n fp32 --input image.jpg
+cargo run --release -p ultralytics --bin codegen_inference -- yolo11n fp32 --input examples/ultralytics/assets/zidane.jpg
 
 # Runtime path — load the .onnx at runtime, no build-time codegen.
-cargo run --release -p ultralytics --bin runtime_inference -- yolo26n fp16 --input image.jpg
+cargo run --release -p ultralytics --bin runtime_inference -- yolo26n fp16 --input examples/ultralytics/assets/zidane.jpg
 ```
 
 ### Benchmark mode
@@ -105,7 +108,7 @@ preprocessed input, followed by a decoded sample. Latency stats
 
 ```bash
 cargo run --release -p ultralytics --bin codegen_inference -- \
-    yolo11n fp32 --input image.jpg --runs 100 --warmup 5
+    yolo11n fp32 --input examples/ultralytics/assets/zidane.jpg --runs 100 --warmup 5
 ```
 
 ### macOS Metal (zero-copy IOSurface import)
@@ -119,7 +122,7 @@ models.
 
 ```bash
 cargo run --release -p ultralytics --features metal --bin codegen_inference -- \
-    yolo11n fp16 --input image.jpg
+    yolo11n fp16 --input examples/ultralytics/assets/zidane.jpg
 ```
 
 > `--features metal` resolves to the `ultralytics` package's own `metal` feature,
